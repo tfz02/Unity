@@ -1,4 +1,3 @@
-using MergeDefenseSurvivor.Prototype;
 using UnityEngine;
 
 namespace MergeDefenseSurvivor.Runtime
@@ -8,14 +7,14 @@ namespace MergeDefenseSurvivor.Runtime
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void CreateGameIfMissing()
         {
-            if (Object.FindFirstObjectByType<MDSPrototypeGame>() != null)
+            if (Object.FindFirstObjectByType<MDSFullGame>() != null)
             {
                 return;
             }
 
             GameObject root = new GameObject("MDS_Game_Runtime");
             Object.DontDestroyOnLoad(root);
-            root.AddComponent<MDSPrototypeGame>();
+            root.AddComponent<MDSFullGame>();
         }
     }
 }
