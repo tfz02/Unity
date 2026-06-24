@@ -7,14 +7,14 @@ namespace MergeDefenseSurvivor.Runtime
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void CreateGameIfMissing()
         {
-            if (Object.FindAnyObjectByType<MDSFullGame>() != null)
+            if (Object.FindAnyObjectByType<MDSArcadeGame>() != null)
             {
                 return;
             }
 
             GameObject root = new GameObject("MDS_Game_Runtime");
             Object.DontDestroyOnLoad(root);
-            root.AddComponent<MDSFullGame>();
+            root.AddComponent<MDSArcadeGame>();
         }
     }
 }
