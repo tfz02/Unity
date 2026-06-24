@@ -5,7 +5,7 @@ namespace MergeDefenseSurvivor.Runtime
 {
     public sealed class MDSQuaterniusThemeRuntime : MonoBehaviour
     {
-        private readonly HashSet<int> themedObjects = new();
+        private readonly HashSet<GameObject> themedObjects = new();
         private MDSAssetCatalog catalog;
         private bool environmentCreated;
         private float scanTimer;
@@ -59,7 +59,7 @@ namespace MergeDefenseSurvivor.Runtime
             GameObject[] allObjects = FindObjectsByType<GameObject>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
             foreach (GameObject obj in allObjects)
             {
-                if (obj == null || themedObjects.Contains(obj.GetInstanceID()))
+                if (obj == null || themedObjects.Contains(obj))
                 {
                     continue;
                 }
@@ -115,7 +115,7 @@ namespace MergeDefenseSurvivor.Runtime
 
         private void ReplaceVisual(GameObject root, GameObject prefab, Vector3 localOffset, float scale, bool hideOriginal)
         {
-            themedObjects.Add(root.GetInstanceID());
+            themedObjects.Add(root);
 
             if (root.transform.Find("MDS_ModelOverride") != null)
             {
