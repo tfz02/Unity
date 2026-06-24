@@ -7,7 +7,7 @@ namespace MergeDefenseSurvivor.Runtime
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void CreateGameIfMissing()
         {
-            if (Object.FindFirstObjectByType<MDSFullGame>() != null)
+            if (Object.FindAnyObjectByType<MDSFullGame>() != null)
             {
                 return;
             }
