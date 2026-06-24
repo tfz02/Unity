@@ -8,6 +8,8 @@ namespace MergeDefenseSurvivor.Runtime
         private readonly HashSet<GameObject> themedObjects = new();
         private MDSAssetCatalog catalog;
         private bool environmentCreated;
+        private bool baseModelCreated;
+        private bool spawnModelCreated;
         private float scanTimer;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -70,35 +72,37 @@ namespace MergeDefenseSurvivor.Runtime
                     GameObject prefab = PickTowerPrefab(n);
                     if (prefab != null)
                     {
-                        ReplaceVisual(obj, prefab, new Vector3(0f, 0.06f, 0f), 0.55f, true);
+                        ReplaceVisual(obj, prefab, new Vector3(0f, 0.05f, 0f), 0.85f, true, true);
                     }
                 }
                 else if (n.Contains("Enemy Drone"))
                 {
                     if (catalog.opponentSmall != null)
                     {
-                        ReplaceVisual(obj, catalog.opponentSmall, new Vector3(0f, 0.12f, 0f), 0.42f, true);
+                        ReplaceVisual(obj, catalog.opponentSmall, new Vector3(0f, 0.08f, 0f), 0.55f, true, true);
                     }
                 }
                 else if (n.Contains("Boss Drone"))
                 {
                     if (catalog.opponentLarge != null)
                     {
-                        ReplaceVisual(obj, catalog.opponentLarge, new Vector3(0f, 0.1f, 0f), 0.72f, true);
+                        ReplaceVisual(obj, catalog.opponentLarge, new Vector3(0f, 0.08f, 0f), 0.95f, true, true);
                     }
                 }
-                else if (n == "Base Platform" || n == "Base Core")
+                else if ((n == "Base Platform" || n == "Base Core") && !baseModelCreated)
                 {
                     if (catalog.homeBase != null)
                     {
-                        ReplaceVisual(obj, catalog.homeBase, new Vector3(0f, 0.0f, -0.15f), 0.75f, false);
+                        CreateSingleWorldModel("MDS_Western_Base_Model", catalog.homeBase, new Vector3(0f, 0.02f, -5.25f), Quaternion.Euler(0f, 180f, 0f), 2.05f);
+                        baseModelCreated = true;
                     }
                 }
-                else if (n == "Spawn Platform")
+                else if (n == "Spawn Platform" && !spawnModelCreated)
                 {
                     if (catalog.startGate != null)
                     {
-                        ReplaceVisual(obj, catalog.startGate, new Vector3(0f, 0.0f, 0.0f), 0.58f, false);
+                        CreateSingleWorldModel("MDS_Western_Spawn_Model", catalog.startGate, new Vector3(0f, 0.02f, 5.2f), Quaternion.identity, 1.15f);
+                        spawnModelCreated = true;
                     }
                 }
             }
@@ -113,7 +117,7 @@ namespace MergeDefenseSurvivor.Runtime
             return catalog.towerA;
         }
 
-        private void ReplaceVisual(GameObject root, GameObject prefab, Vector3 localOffset, float scale, bool hideOriginal)
+        private void ReplaceVisual(GameObject root, GameObject prefab, Vector3 localOffset, float targetMaxSize, bool hideOriginal, bool keepHpBars)
         {
             themedObjects.Add(root);
 
@@ -127,7 +131,7 @@ namespace MergeDefenseSurvivor.Runtime
                 Renderer[] renderers = root.GetComponentsInChildren<Renderer>();
                 foreach (Renderer renderer in renderers)
                 {
-                    if (renderer.gameObject.name.Contains("HP"))
+                    if (keepHpBars && renderer.gameObject.name.Contains("HP"))
                     {
                         continue;
                     }
@@ -140,32 +144,34 @@ namespace MergeDefenseSurvivor.Runtime
             model.name = "MDS_ModelOverride";
             model.transform.localPosition = localOffset;
             model.transform.localRotation = Quaternion.identity;
-            model.transform.localScale = Vector3.one * scale;
+            model.transform.localScale = Vector3.one;
             DisableModelColliders(model);
+            NormalizeModel(model, targetMaxSize);
         }
 
         private void CreateWesternEnvironment()
         {
             PlaceArray(catalog.nature, new[]
             {
-                new Vector3(-4.1f, 0.02f, 4.2f), new Vector3(4.1f, 0.02f, 4.1f),
-                new Vector3(-4.2f, 0.02f, 1.6f), new Vector3(4.25f, 0.02f, -0.9f),
-                new Vector3(-4.0f, 0.02f, -3.7f), new Vector3(4.0f, 0.02f, -3.6f)
-            }, 0.55f);
+                new Vector3(-4.45f, 0.02f, 4.55f), new Vector3(4.45f, 0.02f, 4.45f),
+                new Vector3(-4.65f, 0.02f, 1.8f), new Vector3(4.65f, 0.02f, 1.15f),
+                new Vector3(-4.5f, 0.02f, -1.45f), new Vector3(4.55f, 0.02f, -1.9f),
+                new Vector3(-4.35f, 0.02f, -4.25f), new Vector3(4.35f, 0.02f, -4.15f)
+            }, 0.75f);
 
             PlaceArray(catalog.buildings, new[]
             {
-                new Vector3(-5.2f, 0.02f, 2.9f), new Vector3(5.25f, 0.02f, 2.55f),
-                new Vector3(-5.15f, 0.02f, -2.15f), new Vector3(5.2f, 0.02f, -2.55f)
-            }, 0.62f);
+                new Vector3(-5.65f, 0.02f, 3.75f), new Vector3(5.65f, 0.02f, 3.55f),
+                new Vector3(-5.75f, 0.02f, -3.25f), new Vector3(5.75f, 0.02f, -3.45f)
+            }, 1.25f);
 
             PlaceArray(catalog.trainProps, new[]
             {
-                new Vector3(-3.95f, 0.04f, -4.85f), new Vector3(3.95f, 0.04f, -4.85f)
-            }, 0.5f);
+                new Vector3(-3.7f, 0.04f, -5.25f), new Vector3(3.7f, 0.04f, -5.25f)
+            }, 0.95f);
         }
 
-        private void PlaceArray(GameObject[] prefabs, Vector3[] positions, float scale)
+        private void PlaceArray(GameObject[] prefabs, Vector3[] positions, float targetMaxSize)
         {
             if (prefabs == null || prefabs.Length == 0)
             {
@@ -184,9 +190,56 @@ namespace MergeDefenseSurvivor.Runtime
                 model.name = "MDS_Theme_Decor_" + prefab.name;
                 model.transform.position = positions[i];
                 model.transform.rotation = Quaternion.Euler(0f, (i * 73f) % 360f, 0f);
-                model.transform.localScale = Vector3.one * scale;
+                model.transform.localScale = Vector3.one;
                 DisableModelColliders(model);
+                NormalizeModel(model, targetMaxSize);
             }
+        }
+
+        private void CreateSingleWorldModel(string name, GameObject prefab, Vector3 position, Quaternion rotation, float targetMaxSize)
+        {
+            GameObject model = Instantiate(prefab);
+            model.name = name;
+            model.transform.position = position;
+            model.transform.rotation = rotation;
+            model.transform.localScale = Vector3.one;
+            DisableModelColliders(model);
+            NormalizeModel(model, targetMaxSize);
+        }
+
+        private void NormalizeModel(GameObject model, float targetMaxSize)
+        {
+            Bounds bounds = CalculateBounds(model);
+            float maxSize = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
+            if (maxSize <= 0.001f)
+            {
+                model.transform.localScale = Vector3.one * targetMaxSize;
+                return;
+            }
+
+            float factor = targetMaxSize / maxSize;
+            model.transform.localScale *= factor;
+
+            Bounds scaledBounds = CalculateBounds(model);
+            Vector3 offset = model.transform.position - scaledBounds.center;
+            offset.y += scaledBounds.extents.y;
+            model.transform.position += offset;
+        }
+
+        private Bounds CalculateBounds(GameObject model)
+        {
+            Renderer[] renderers = model.GetComponentsInChildren<Renderer>();
+            if (renderers.Length == 0)
+            {
+                return new Bounds(model.transform.position, Vector3.one);
+            }
+
+            Bounds bounds = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++)
+            {
+                bounds.Encapsulate(renderers[i].bounds);
+            }
+            return bounds;
         }
 
         private void DisableModelColliders(GameObject model)
